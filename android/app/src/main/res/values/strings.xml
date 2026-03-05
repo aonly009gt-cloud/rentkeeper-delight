@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">จัดการห้องเช่า</string>
+    <string name="title_activity_main">จัดการห้องเช่า</string>
+    <string name="package_name">com.rentkeeper.app</string>
+    <string name="custom_url_scheme">com.rentkeeper.app</string>
+</resources>
