@@ -37,12 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initLiff = async () => {
       try {
         const liffId = import.meta.env.VITE_LINE_LIFF_ID;
-        if (liffId) {
+        if (liffId && typeof window !== 'undefined') {
           await liff.init({ liffId });
-          if (liff.isLoggedIn() && !session) {
-            // We are logged into LIFF but not Supabase, call the verification
-            await signInWithLine();
-          }
+          console.log('LIFF initialized');
         }
       } catch (e) {
         console.error("LIFF Init Error:", e);
