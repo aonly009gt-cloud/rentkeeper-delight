@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { Room, Settings, defaultSettings, getCurrentMonth } from '@/types/rental';
 import { roomService, settingsService, AppError } from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RentalContextType {
   rooms: Room[];
@@ -23,11 +24,14 @@ const RentalContext = createContext<RentalContextType | undefined>(undefined);
 
 export function RentalProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const userId = user?.id || 'default-user';
 
   const showError = useCallback((message: string) => {
     setError(message);
