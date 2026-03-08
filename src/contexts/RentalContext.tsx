@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Room, Settings, defaultSettings, getCurrentMonth } from '@/types/rental';
-import { useAuth } from '@/contexts/AuthContext';
 import { roomService, settingsService, AppError } from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -23,13 +22,14 @@ interface RentalContextType {
 const RentalContext = createContext<RentalContextType | undefined>(undefined);
 
 export function RentalProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const userId = 'default-user';
 
   const showError = useCallback((message: string) => {
     setError(message);
@@ -49,15 +49,10 @@ export function RentalProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   const fetchRooms = useCallback(async () => {
-    if (!user) {
-      setRooms([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
-      const data = await roomService.getAll(user.id);
+      const data = await roomService.getAll(userId);
       setRooms(data);
     } catch (err) {
       if (err instanceof AppError) {
@@ -68,15 +63,11 @@ export function RentalProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user, showError]);
+  }, [showError]);
 
   const fetchSettings = useCallback(async () => {
-    if (!user) {
-      setSettings(defaultSettings);
-      return;
-    }
     try {
-      const data = await settingsService.get(user.id);
+      const data = await settingsService.get(userId);
       setSettings(data);
     } catch (err) {
       if (err instanceof AppError) {
@@ -85,7 +76,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
         showError('ไม่สามารถโหลดการตั้งค่าได้');
       }
     }
-  }, [user, showError]);
+  }, [showError]);
 
   const refreshData = useCallback(async () => {
     await Promise.all([fetchRooms(), fetchSettings()]);
@@ -98,8 +89,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const addRoom = async (room: Omit<Room, 'id'>) => {
     try {
-      if (!user) return;
-      const newRoom = await roomService.create(user.id, room, settings.electricityRate);
+      const newRoom = await roomService.create(userId, room, settings.electricityRate);
       if (newRoom) {
         setRooms(prev => [...prev, newRoom]);
         showSuccess('เพิ่มห้องสำเร็จ');
@@ -116,8 +106,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const updateRoom = async (room: Room) => {
     try {
-      if (!user) return;
-      await roomService.update(room, user.id, settings.electricityRate);
+      await roomService.update(room, userId, settings.electricityRate);
       setRooms(prev => prev.map(r => r.id === room.id ? room : r));
       showSuccess('อัปเดตห้องสำเร็จ');
     } catch (err) {
@@ -164,8 +153,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = async (s: Settings) => {
     try {
-      if (!user) return;
-      await settingsService.update(user.id, s);
+      await settingsService.update(userId, s);
       setSettings(s);
       showSuccess('บันทึกการตั้งค่าสำเร็จ');
     } catch (err) {
