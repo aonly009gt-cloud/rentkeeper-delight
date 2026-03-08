@@ -1,31 +1,32 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Globe, MessageCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Globe, LogIn } from 'lucide-react';
 
 export default function AuthPage() {
-  const { signInWithLine } = useAuth();
+  const { signIn, signUp } = useAuth();
   const { t, language, setLanguage } = useLanguage();
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleLineLogin = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    
     try {
-      const { error } = await signInWithLine();
+      const { error } = isLogin 
+        ? await signIn(email, password)
+        : await signUp(email, password);
+      
       if (error) {
-        alert("ข้อผิดพลาด: " + (error.message || error));
-        toast.error(error.message || 'เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่');
-        setLoading(false);
-      } else {
-        setTimeout(() => {
-          // If stuck on loading after success, force reload
-          window.location.reload();
-        }, 3000);
+        toast.error(error.message);
       }
-    } catch (err: any) {
-      alert("ข้อผิดพลาดระบบ: " + err.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -35,33 +36,56 @@ export default function AuthPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold">🏘️</h1>
-          <h2 className="text-xl font-bold mt-2">{t('app.title')}</h2>
+          <h2 className="text-xl font-bold mt-2">ห้องเช่าช่างพัฒน์ 371</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            เข้าสู่ระบบเพื่อจัดการห้องเช่า
+            {isLogin ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}
           </p>
         </div>
 
-        <div className="bg-card rounded-xl border p-6 space-y-6 flex flex-col items-center">
-          <div className="bg-[#00B900]/10 p-4 rounded-full mb-2">
-            <MessageCircle className="w-10 h-10 text-[#00B900]" />
+        <form onSubmit={handleSubmit} className="bg-card rounded-xl border p-6 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">อีเมล</label>
+            <Input
+              type="email"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-          <div className="text-center space-y-2">
-            <h3 className="font-semibold text-lg">เข้าสู่ระบบด้วย LINE</h3>
-            <p className="text-sm text-muted-foreground">
-              สะดวก ปลอดภัย ไม่ต้องจำรหัสผ่าน
-            </p>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">รหัสผ่าน</label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
           </div>
 
           <Button
-            onClick={handleLineLogin}
-            className="w-full bg-[#00B900] hover:bg-[#00B900]/90 text-white"
+            type="submit"
+            className="w-full"
             size="lg"
             disabled={loading}
           >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            {loading ? 'กำลังเชื่อมต่อ...' : 'เข้าสู่ระบบด้วย LINE'}
+            <LogIn className="w-5 h-5 mr-2" />
+            {loading ? 'กำลังโหลด...' : isLogin ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}
           </Button>
-        </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              className="text-sm text-muted-foreground hover:underline"
+              onClick={() => setIsLogin(!isLogin)}
+            >
+              {isLogin ? 'ยังไม่มีบัญชี? สมัคร' : 'มีบัญชีแล้ว? เข้าสู่ระบบ'}
+            </button>
+          </div>
+        </form>
 
         <div className="flex items-center justify-center">
           <Button
