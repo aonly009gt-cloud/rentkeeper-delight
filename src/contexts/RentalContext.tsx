@@ -29,8 +29,6 @@ export function RentalProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const userId = 'default-user';
-
   const showError = useCallback((message: string) => {
     setError(message);
     toast({
@@ -52,7 +50,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await roomService.getAll(userId);
+      const data = await roomService.getAll();
       setRooms(data);
     } catch (err) {
       if (err instanceof AppError) {
@@ -67,7 +65,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await settingsService.get(userId);
+      const data = await settingsService.get();
       setSettings(data);
     } catch (err) {
       if (err instanceof AppError) {
@@ -89,7 +87,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const addRoom = async (room: Omit<Room, 'id'>) => {
     try {
-      const newRoom = await roomService.create(userId, room, settings.electricityRate);
+      const newRoom = await roomService.create(room);
       if (newRoom) {
         setRooms(prev => [...prev, newRoom]);
         showSuccess('เพิ่มห้องสำเร็จ');
@@ -106,7 +104,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const updateRoom = async (room: Room) => {
     try {
-      await roomService.update(room, userId, settings.electricityRate);
+      await roomService.update(room);
       setRooms(prev => prev.map(r => r.id === room.id ? room : r));
       showSuccess('อัปเดตห้องสำเร็จ');
     } catch (err) {
@@ -153,7 +151,7 @@ export function RentalProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = async (s: Settings) => {
     try {
-      await settingsService.update(userId, s);
+      await settingsService.update(s);
       setSettings(s);
       showSuccess('บันทึกการตั้งค่าสำเร็จ');
     } catch (err) {
